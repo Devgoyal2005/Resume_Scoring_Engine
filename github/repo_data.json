@@ -75,11 +75,11 @@
       "images": [],
       "badges": [],
       "detected_tech_stack": [
-        "node",
+        "python",
         "react",
-        "fastapi",
+        "node",
         "tensorflow",
-        "python"
+        "fastapi"
       ]
     }
   }

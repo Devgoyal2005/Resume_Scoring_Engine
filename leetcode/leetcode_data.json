@@ -1,0 +1,110 @@
+{
+  "profile_info": {
+    "username": "dev_goyal_001",
+    "real_name": "Dev Goyal",
+    "ranking": 660895,
+    "reputation": 0,
+    "country": "India",
+    "about": "",
+    "websites": [],
+    "skill_tags": []
+  },
+  "problem_stats": {
+    "accepted": {
+      "All": 219,
+      "Easy": 126,
+      "Medium": 87,
+      "Hard": 6
+    },
+    "total_submissions": {
+      "All": 222,
+      "Easy": 127,
+      "Medium": 88,
+      "Hard": 7
+    }
+  },
+  "contest_info": {
+    "attended": 0,
+    "rating": 0,
+    "global_ranking": 0,
+    "top_percentage": 0
+  },
+  "badges": [
+    {
+      "name": "Annual Badge",
+      "icon": "https://assets.leetcode.com/static_assets/others/lg2550.png"
+    }
+  ],
+  "recent_submissions": [
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771052704",
+      "statusDisplay": "Accepted",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771052695",
+      "statusDisplay": "Accepted",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771052485",
+      "statusDisplay": "Wrong Answer",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771052381",
+      "statusDisplay": "Wrong Answer",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771051576",
+      "statusDisplay": "Wrong Answer",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771046004",
+      "statusDisplay": "Wrong Answer",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771045471",
+      "statusDisplay": "Wrong Answer",
+      "lang": "cpp"
+    },
+    {
+      "title": "Largest Rectangle in Histogram",
+      "titleSlug": "largest-rectangle-in-histogram",
+      "timestamp": "1771045429",
+      "statusDisplay": "Wrong Answer",
+      "lang": "cpp"
+    },
+    {
+      "title": "Simplify Path",
+      "titleSlug": "simplify-path",
+      "timestamp": "1770992384",
+      "statusDisplay": "Accepted",
+      "lang": "cpp"
+    },
+    {
+      "title": "String Compression",
+      "titleSlug": "string-compression",
+      "timestamp": "1770826429",
+      "statusDisplay": "Accepted",
+      "lang": "cpp"
+    }
+  ]
+}

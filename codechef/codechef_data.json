@@ -1,0 +1,22 @@
+{
+  "profile_info": {
+    "username": "your_codechef_username",
+    "profile_url": "https://www.codechef.com/users/your_codechef_username",
+    "name": null,
+    "country": null,
+    "current_rating": null,
+    "highest_rating": null,
+    "global_rank": null,
+    "country_rank": null,
+    "stars": null
+  },
+  "statistics": {
+    "problems_solved": null,
+    "total_contests": null,
+    "div1_contests": 0,
+    "div2_contests": 0,
+    "div3_contests": 0
+  },
+  "recent_activity": [],
+  "note": "CodeChef scraping requires HTML parsing - data may be incomplete"
+}

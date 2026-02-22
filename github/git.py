@@ -136,10 +136,15 @@ def extract_repo(repo_url):
 
 if __name__ == "__main__":
     # Read from .env file
-    with open('.env', 'r') as f:
+    with open('../.env', 'r') as f:
         lines = f.readlines()
-        username = lines[0].split(':', 1)[1].strip()
-        repo_url = lines[1].split(':', 1)[1].strip()
+        username = None
+        repo_url = None
+        for line in lines:
+            if 'github_profile' in line.lower():
+                username = line.split(':', 1)[1].strip()
+            elif 'github_repo' in line.lower():
+                repo_url = line.split(':', 1)[1].strip()
     
     print(f"Processing GitHub username: {username}")
     print(f"Processing repo: {repo_url}")

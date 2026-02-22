@@ -18,10 +18,10 @@
       "images": [],
       "badges": [],
       "detected_tech_stack": [
-        "java",
         "javascript",
+        "tensorflow",
         "python",
-        "tensorflow"
+        "java"
       ]
     }
   }
