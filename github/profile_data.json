@@ -5,7 +5,7 @@
     "bio": null,
     "followers": 13,
     "following": 10,
-    "public_repos": 71,
+    "public_repos": 72,
     "created_at": "2024-02-04T08:50:10Z",
     "profile_url": "https://github.com/Devgoyal2005"
   },
@@ -19,8 +19,8 @@
       "badges": [],
       "detected_tech_stack": [
         "javascript",
-        "tensorflow",
         "python",
+        "tensorflow",
         "java"
       ]
     }

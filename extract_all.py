@@ -9,7 +9,6 @@ from github.git import extract_profile as extract_github_profile, extract_repo a
 from leetcode.leetcode import extract_leetcode_profile
 from codeforces.codeforces import extract_codeforces_profile
 from codechef.codechef import extract_codechef_profile
-from linkedin.linkedin import extract_linkedin_profile
 
 def load_env_config():
     """Load configuration from .env file"""
@@ -30,7 +29,7 @@ def extract_all_profiles():
     """Extract data from all platforms and save to respective folders"""
     
     print("=" * 60)
-    print("PROFILE DATA EXTRACTION - ALL PLATFORMS")
+    print("PROFILE DATA EXTRACTION - CODING PLATFORMS")
     print("=" * 60)
     
     # Load configuration
@@ -38,7 +37,7 @@ def extract_all_profiles():
     
     # GitHub Extraction
     if config.get('github_profile') and config.get('github_repo'):
-        print("\n[1/5] Extracting GitHub data...")
+        print("\n[1/4] Extracting GitHub data...")
         try:
             username = config['github_profile']
             repo_url = config['github_repo']
@@ -64,7 +63,7 @@ def extract_all_profiles():
     
     # LeetCode Extraction
     if config.get('leetcode'):
-        print("\n[2/5] Extracting LeetCode data...")
+        print("\n[2/4] Extracting LeetCode data...")
         try:
             username = config['leetcode']
             print(f"  → Username: {username}")
@@ -83,7 +82,7 @@ def extract_all_profiles():
     
     # Codeforces Extraction
     if config.get('codeforces'):
-        print("\n[3/5] Extracting Codeforces data...")
+        print("\n[3/4] Extracting Codeforces data...")
         try:
             username = config['codeforces']
             print(f"  → Username: {username}")
@@ -102,7 +101,7 @@ def extract_all_profiles():
     
     # CodeChef Extraction
     if config.get('codechef'):
-        print("\n[4/5] Extracting CodeChef data...")
+        print("\n[4/4] Extracting CodeChef data...")
         try:
             username = config['codechef']
             print(f"  → Username: {username}")
@@ -117,27 +116,7 @@ def extract_all_profiles():
         except Exception as e:
             print(f"  ✗ CodeChef extraction failed: {str(e)}")
     else:
-        print("\n[4/5] Skipping CodeChef - username not found in .env")
-    
-    # LinkedIn Extraction
-    if config.get('linkedin'):
-        print("\n[5/5] Extracting LinkedIn data...")
-        try:
-            profile_url = config['linkedin']
-            print(f"  → Profile: {profile_url}")
-            
-            linkedin_data = extract_linkedin_profile(profile_url)
-            
-            # Save to linkedin folder
-            with open('linkedin/linkedin_data.json', 'w') as f:
-                json.dump(linkedin_data, f, indent=2)
-            
-            print("  ✓ LinkedIn data saved successfully")
-            print("  ⚠ Note: LinkedIn requires API access for full data")
-        except Exception as e:
-            print(f"  ✗ LinkedIn extraction failed: {str(e)}")
-    else:
-        print("\n[5/5] Skipping LinkedIn - profile URL not found in .env")
+        print("\n[4/4] Skipping CodeChef - username not found in .env")
     
     print("\n" + "=" * 60)
     print("EXTRACTION COMPLETE!")
@@ -147,7 +126,6 @@ def extract_all_profiles():
     print("  • leetcode/leetcode_data.json")
     print("  • codeforces/codeforces_data.json")
     print("  • codechef/codechef_data.json")
-    print("  • linkedin/linkedin_data.json")
     print("=" * 60)
 
 if __name__ == "__main__":
