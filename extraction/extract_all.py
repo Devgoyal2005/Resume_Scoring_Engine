@@ -5,7 +5,7 @@ import os
 # Add parent directory to path to import modules
 sys.path.insert(0, os.path.dirname(__file__))
 
-from github.git import extract_profile as extract_github_profile, extract_repo as extract_github_repo
+from github.git import extract_github_data
 from leetcode.leetcode import extract_leetcode_profile
 from codeforces.codeforces import extract_codeforces_profile
 from codechef.codechef import extract_codechef_profile
@@ -25,6 +25,11 @@ def load_env_config():
     
     return config
 
+def _clear_json(filepath):
+    """Remove a stale data file so the merge step won't pick up an old run's result"""
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
 def extract_all_profiles():
     """Extract data from all platforms and save to respective folders"""
     
@@ -36,34 +41,24 @@ def extract_all_profiles():
     config = load_env_config()
     
     # GitHub Extraction
-    if config.get('github_profile') and config.get('github_repo'):
-        print("\n[1/4] Extracting GitHub data...")
+    print("\n[1/4] GitHub:")
+    if config.get('github_profile'):
         try:
             username = config['github_profile']
-            repo_url = config['github_repo']
-            
-            print(f"  → Profile: {username}")
-            print(f"  → Repo: {repo_url}")
-            
-            profile_data = extract_github_profile(username)
-            repo_data = extract_github_repo(repo_url)
-            
-            # Save to github folder
-            with open('github/profile_data.json', 'w') as f:
-                json.dump(profile_data, f, indent=2)
-            
-            with open('github/repo_data.json', 'w') as f:
-                json.dump(repo_data, f, indent=2)
-            
+            print(f"  → Username: {username}")
+            github_data = extract_github_data(username)
+            with open('github/github_data.json', 'w') as f:
+                json.dump(github_data, f, indent=2)
             print("  ✓ GitHub data saved successfully")
         except Exception as e:
             print(f"  ✗ GitHub extraction failed: {str(e)}")
     else:
-        print("\n[1/5] Skipping GitHub - credentials not found in .env")
+        _clear_json('github/github_data.json')
+        print("  ○ Skipping — github_profile not provided in input")
     
     # LeetCode Extraction
+    print("\n[2/4] LeetCode:")
     if config.get('leetcode'):
-        print("\n[2/4] Extracting LeetCode data...")
         try:
             username = config['leetcode']
             print(f"  → Username: {username}")
@@ -78,11 +73,12 @@ def extract_all_profiles():
         except Exception as e:
             print(f"  ✗ LeetCode extraction failed: {str(e)}")
     else:
-        print("\n[2/5] Skipping LeetCode - username not found in .env")
+        _clear_json('leetcode/leetcode_data.json')
+        print("  ○ Skipping — leetcode username not provided in input")
     
     # Codeforces Extraction
+    print("\n[3/4] Codeforces:")
     if config.get('codeforces'):
-        print("\n[3/4] Extracting Codeforces data...")
         try:
             username = config['codeforces']
             print(f"  → Username: {username}")
@@ -97,11 +93,12 @@ def extract_all_profiles():
         except Exception as e:
             print(f"  ✗ Codeforces extraction failed: {str(e)}")
     else:
-        print("\n[3/5] Skipping Codeforces - username not found in .env")
+        _clear_json('codeforces/codeforces_data.json')
+        print("  ○ Skipping — codeforces username not provided in input")
     
     # CodeChef Extraction
+    print("\n[4/4] CodeChef:")
     if config.get('codechef'):
-        print("\n[4/4] Extracting CodeChef data...")
         try:
             username = config['codechef']
             print(f"  → Username: {username}")
@@ -116,13 +113,14 @@ def extract_all_profiles():
         except Exception as e:
             print(f"  ✗ CodeChef extraction failed: {str(e)}")
     else:
-        print("\n[4/4] Skipping CodeChef - username not found in .env")
+        _clear_json('codechef/codechef_data.json')
+        print("  ○ Skipping — codechef username not provided in input")
     
     print("\n" + "=" * 60)
     print("EXTRACTION COMPLETE!")
     print("=" * 60)
     print("\nData saved in respective folders:")
-    print("  • github/profile_data.json & github/repo_data.json")
+    print("  • github/github_data.json")
     print("  • leetcode/leetcode_data.json")
     print("  • codeforces/codeforces_data.json")
     print("  • codechef/codechef_data.json")
