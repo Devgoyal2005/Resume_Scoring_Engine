@@ -1,0 +1,35 @@
+{
+  "weights": {
+    "exact_keyword": 0.35,
+    "job_title": 0.25,
+    "semantic_similarity": 0.2,
+    "summary_similarity": 0.15,
+    "numeric_metrics": 0.05
+  },
+  "component_scores": {
+    "exact_keyword_score": 14.89,
+    "job_title_score": 1.38,
+    "semantic_similarity": 6.74,
+    "summary_similarity": 7.49,
+    "numeric_metrics": 31.26
+  },
+  "numeric_metrics_breakdown": {
+    "leetcode_problems": 23.2,
+    "codeforces_rating": 0.0,
+    "codechef_rating": 0.0,
+    "github_repos": 60.0,
+    "github_followers": 2.0
+  },
+  "matched_keywords_count": 7,
+  "matched_keywords_sample": [
+    "algorithms",
+    "apis",
+    "aws",
+    "efficient",
+    "java",
+    "python",
+    "rest"
+  ],
+  "final_ats_score": 9.59,
+  "score_scale": "0-100"
+}
