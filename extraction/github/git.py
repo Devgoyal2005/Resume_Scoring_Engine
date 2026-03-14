@@ -1,13 +1,34 @@
 import requests
-import base64
 import re
+import os
+import time
 
 GITHUB_API = "https://api.github.com"
 
+# Load a GitHub Personal Access Token from the .env file if available.
+# Without a token: 60 requests/hour.  With a token: 5000 requests/hour.
+# To add one: create a token at https://github.com/settings/tokens
+# then add a line   github_token: ghp_xxxx   to extraction/.env
+def _load_token():
+    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                if line.lower().startswith('github_token'):
+                    return line.split(':', 1)[1].strip()
+    return None
+
+_TOKEN = _load_token()
+
 HEADERS = {
-    "Accept": "application/vnd.github+json"
-    # Add a personal access token to raise rate limits:
-    # "Authorization": "Bearer YOUR_GITHUB_TOKEN"
+    "Accept": "application/vnd.github+json",
+    **(  {"Authorization": f"Bearer {_TOKEN}"} if _TOKEN else {}  ),
+}
+
+# Languages that are build/config artefacts, not programming skills
+_SKIP_LANGUAGES = {
+    "Batchfile", "PowerShell", "Shell", "Makefile", "Dockerfile",
+    "CMake", "YAML", "JSON", "XML", "TOML", "INI", "Text",
 }
 
 # Keywords scanned inside repo descriptions and READMEs to detect frameworks/tools
@@ -52,11 +73,13 @@ def _fetch_all_pages(url, params=None):
         params["page"] = page
         resp = requests.get(url, headers=HEADERS, params=params)
         if resp.status_code == 403:
-            reset = int(resp.headers.get("X-RateLimit-Reset", 0))
-            wait  = max(reset - int(time.time()), 0) + 2
-            print(f"  ⚠ GitHub rate limit hit — waiting {wait}s")
-            time.sleep(wait)
-            resp = requests.get(url, headers=HEADERS, params=params)
+            remaining = resp.headers.get("X-RateLimit-Remaining", "?")
+            reset     = resp.headers.get("X-RateLimit-Reset", "?")
+            raise RuntimeError(
+                f"GitHub API rate limit exceeded (remaining={remaining}, "
+                f"resets at unix={reset}). "
+                f"Add a github_token to extraction/.env to raise the limit to 5000 req/hr."
+            )
         if resp.status_code != 200:
             break
         batch = resp.json()
@@ -71,22 +94,23 @@ def _fetch_all_pages(url, params=None):
 
 def _get_repo_languages(username, repo_name):
     """
-    Fetch language bytes for one repo.  Retries once on rate-limit.
-    Returns a dict {language: bytes} or {} on failure.
+    Fetch language bytes for one repo.
+    Returns a dict {language: bytes} filtered to skill-relevant languages only.
     """
     url  = f"{GITHUB_API}/repos/{username}/{repo_name}/languages"
     resp = requests.get(url, headers=HEADERS)
     if resp.status_code == 403:
-        reset = int(resp.headers.get("X-RateLimit-Reset", 0))
-        wait  = max(reset - int(time.time()), 0) + 2
-        print(f"  ⚠ Rate limit hit fetching {repo_name} — waiting {wait}s")
-        time.sleep(wait)
-        resp = requests.get(url, headers=HEADERS)
+        remaining = resp.headers.get("X-RateLimit-Remaining", "?")
+        reset     = resp.headers.get("X-RateLimit-Reset", "?")
+        raise RuntimeError(
+            f"GitHub API rate limit exceeded while fetching {repo_name} "
+            f"(remaining={remaining}, resets at unix={reset}). "
+            f"Add a github_token to extraction/.env to raise the limit to 5000 req/hr."
+        )
     if resp.status_code == 200:
         data = resp.json()
-        # GitHub returns {"message": "..."} dict on API errors
         if isinstance(data, dict) and "message" not in data:
-            return data
+            return {lang: b for lang, b in data.items() if lang not in _SKIP_LANGUAGES}
     return {}
 
 
