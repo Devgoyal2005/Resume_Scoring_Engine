@@ -1,5 +1,5 @@
 """
-Extract profile links from individual1.json and generate .env configuration
+Extract profile links/usernames directly from individual JSON.
 """
 import json
 import os
@@ -40,9 +40,9 @@ def extract_username_from_url(url, platform):
     
     return None
 
-def generate_config_from_individual(individual_json_path='../individual1.json', output_env_path='.env'):
+def extract_config_from_individual(individual_json_path='../individual1.json'):
     """
-    Extract links from individual1.json and generate .env configuration
+    Extract links from individual JSON and return normalized usernames/config.
     """
     # Adjust path if running from extraction folder
     if not os.path.exists(individual_json_path):
@@ -85,25 +85,8 @@ def generate_config_from_individual(individual_json_path='../individual1.json', 
         if codechef_username:
             config['codechef'] = codechef_username
     
-    # Write ALL platforms to .env (empty string if not found)
-    # This ensures extract_all.py always has entries for every platform
-    with open(output_env_path, 'w') as f:
-        f.write("# Auto-generated configuration from individual1.json\n\n")
-        
-        f.write("# GitHub\n")
-        f.write(f"github_profile: {config.get('github_profile', '')}\n\n")
-
-        f.write("# LeetCode\n")
-        f.write(f"leetcode: {config.get('leetcode', '')}\n\n")
-        
-        f.write("# Codeforces\n")
-        f.write(f"codeforces: {config.get('codeforces', '')}\n\n")
-        
-        f.write("# CodeChef\n")
-        f.write(f"codechef: {config.get('codechef', '')}\n\n")
-    
     found = [k for k, v in config.items() if v]
-    print(f"✓ Configuration saved to {output_env_path}")
+    print("✓ Configuration extracted directly from input JSON")
     print(f"  Found {len(found)} platform(s) to extract")
     for key in found:
         print(f"    • {key}: {config[key]}")
@@ -114,5 +97,9 @@ def generate_config_from_individual(individual_json_path='../individual1.json', 
     
     return config
 
+
+# Backward-compatible alias
+generate_config_from_individual = extract_config_from_individual
+
 if __name__ == "__main__":
-    generate_config_from_individual()
+    extract_config_from_individual()

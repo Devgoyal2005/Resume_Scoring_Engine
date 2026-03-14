@@ -3,7 +3,7 @@ Main Pipeline for Resume Data Extraction and Generation
 
 This script orchestrates the entire process:
 1. Reads individual1.json
-2. Extracts profile links and generates .env configuration
+2. Extracts profile links/usernames directly from JSON
 3. Fetches data from all competitive programming platforms and GitHub
 4. Merges everything into a final resume.json
 
@@ -42,15 +42,12 @@ def run_pipeline(input_file='individual1.json', output_file='resume.json'):
     print("=" * 70)
     
     try:
-        # Step 1: Extract links from individual JSON and generate .env
+        # Step 1: Extract links/usernames directly from individual JSON
         print("\n" + "▶ " * 35)
         print("STEP 1: EXTRACTING PROFILE LINKS FROM INPUT FILE")
         print("▶ " * 35)
         
-        config = generate_config_from_individual(
-            individual_json_path=input_file,
-            output_env_path='extraction/.env'
-        )
+        config = generate_config_from_individual(individual_json_path=input_file)
         
         # Report how many profiles were found, but always continue —
         # platforms not present in the input will be skipped during extraction
@@ -68,7 +65,7 @@ def run_pipeline(input_file='individual1.json', output_file='resume.json'):
         os.chdir('extraction')
         
         try:
-            extract_all_profiles()
+            extract_all_profiles(config)
         finally:
             # Change back to original directory
             os.chdir(original_dir)

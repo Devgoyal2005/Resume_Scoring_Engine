@@ -9,36 +9,19 @@ from github.git import extract_github_data
 from leetcode.leetcode import extract_leetcode_profile
 from codeforces.codeforces import extract_codeforces_profile
 from codechef.codechef import extract_codechef_profile
-
-def load_env_config():
-    """Load configuration from .env file"""
-    config = {}
-    
-    with open('.env', 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip()
-            if line and not line.startswith('#'):
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    config[key.strip()] = value.strip()
-    
-    return config
+from extract_links import extract_config_from_individual
 
 def _clear_json(filepath):
     """Remove a stale data file so the merge step won't pick up an old run's result"""
     if os.path.exists(filepath):
         os.remove(filepath)
 
-def extract_all_profiles():
-    """Extract data from all platforms and save to respective folders"""
+def extract_all_profiles(config):
+    """Extract data from all platforms and save to respective folders."""
     
     print("=" * 60)
     print("PROFILE DATA EXTRACTION - CODING PLATFORMS")
     print("=" * 60)
-    
-    # Load configuration
-    config = load_env_config()
     
     # GitHub Extraction
     print("\n[1/4] GitHub:")
@@ -127,4 +110,6 @@ def extract_all_profiles():
     print("=" * 60)
 
 if __name__ == "__main__":
-    extract_all_profiles()
+    # Standalone fallback mode: read directly from ../individual1.json
+    cfg = extract_config_from_individual('../individual1.json')
+    extract_all_profiles(cfg)
