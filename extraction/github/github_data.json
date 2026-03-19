@@ -15,9 +15,7 @@
       "HTML": 66503,
       "JavaScript": 7896,
       "Python": 10524911,
-      "CSS": 12654,
-      "PowerShell": 25697,
-      "Batchfile": 1369
+      "CSS": 12654
     },
     "languages_ranked": [
       "Python",
@@ -25,10 +23,8 @@
       "C++",
       "HTML",
       "C",
-      "PowerShell",
       "CSS",
-      "JavaScript",
-      "Batchfile"
+      "JavaScript"
     ],
     "topics_and_tools": []
   }

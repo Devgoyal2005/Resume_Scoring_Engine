@@ -1,36 +1,35 @@
 {
-  "company": "Amazon",
-  "job_title": "Software Development Engineer I",
-  "location": "Bangalore, India",
-  "employment_type": "Full-time",
-  "experience_required": "0-2 years",
-  "department": "Engineering",
-  "job_description": "Amazon is looking for passionate Software Development Engineers who want to solve large-scale distributed system problems and build customer-centric products used by millions of customers worldwide.",
+  "company": "Microsoft",
+  "job_title": "Software Engineering Intern",
+  "location": "Not specified (On-site)",
+  "employment_type": "Internship",
+  "experience_required": "At least 1 year programming experience",
+  "department": "Software Engineering",
+  "job_description": "Microsoft is offering an internship opportunity for students to work on real-world projects, build innovative software solutions, and collaborate with global teams while learning new technologies and contributing to impactful products.",
   "responsibilities": [
-    "Design and develop scalable backend services and APIs",
-    "Work on distributed systems handling large-scale data",
-    "Collaborate with product managers, designers, and other engineers",
-    "Write clean, efficient, and maintainable code",
-    "Participate in code reviews and system design discussions",
-    "Improve performance, reliability, and security of services"
+    "Apply engineering principles to solve complex problems creatively",
+    "Collaborate with stakeholders to gather and understand user requirements",
+    "Learn and adopt new technologies, tools, and engineering methods",
+    "Seek feedback and apply best practices to improve technical solutions",
+    "Manage time effectively and contribute to team-based software projects",
+    "Continuously learn and improve product performance, reliability, and scalability",
+    "Contribute to monitoring, operations, and system efficiency at scale"
   ],
   "required_qualifications": [
-    "Bachelor’s degree in Computer Science or related field",
-    "Strong programming skills in Java, Python, or C++",
-    "Good understanding of data structures and algorithms",
-    "Knowledge of object-oriented programming and system design",
-    "Familiarity with REST APIs and databases"
+    "Currently pursuing a Bachelor’s or Master’s degree in Computer Science, Engineering, or related field",
+    "Must have at least one semester remaining after the internship",
+    "At least one year of programming experience in an object-oriented language"
   ],
   "preferred_qualifications": [
-    "Experience with AWS or other cloud platforms",
-    "Knowledge of microservices architecture",
-    "Experience with distributed systems"
+    "Understanding of computer science fundamentals including data structures and algorithms"
   ],
   "skills": [
+    "Object-Oriented Programming",
     "Data Structures and Algorithms",
     "Problem Solving",
-    "Backend Development",
-    "System Design",
-    "Cloud Computing"
+    "Software Development",
+    "Time Management",
+    "Collaboration",
+    "Learning Agility"
   ]
 }

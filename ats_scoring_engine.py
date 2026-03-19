@@ -1,8 +1,6 @@
 import argparse
 import json
 import re
-import math
-from collections import Counter
 from typing import Any, Dict, List, Tuple
 
 try:
@@ -22,6 +20,58 @@ except ImportError:
     MODEL = None
 
 NLTK_READY = False
+
+GENERIC_JOB_TERMS = {
+    "looking", "engineer", "engineering", "software", "development", "developer",
+    "experience", "required", "qualification", "preferred", "responsibility",
+    "strong", "good", "knowledge", "understanding", "work", "working", "build",
+    "team", "product", "customer", "system", "service", "services", "code",
+    "clean", "maintainable", "scalable", "design", "develop", "year", "years",
+}
+
+
+def _ensure_nltk_resources() -> None:
+    if not NLTK_AVAILABLE or nltk is None:
+        return
+    resources = [
+        ("corpora/stopwords", "stopwords"),
+        ("corpora/wordnet", "wordnet"),
+        ("corpora/omw-1.4", "omw-1.4"),
+    ]
+    for resource_path, download_name in resources:
+        try:
+            nltk.data.find(resource_path)
+        except LookupError:
+            try:
+                nltk.download(download_name, quiet=True)
+            except Exception:
+                return
+        except Exception:
+            return
+
+
+_ensure_nltk_resources()
+if NLTK_AVAILABLE and stopwords is not None and WordNetLemmatizer is not None:
+    try:
+        STOP_WORDS = set(stopwords.words("english"))
+        LEMMATIZER = WordNetLemmatizer()
+        NLTK_READY = True
+    except Exception:
+        STOP_WORDS = {
+            "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
+            "has", "he", "in", "is", "it", "its", "of", "on", "that", "the",
+            "to", "was", "were", "will", "with", "or", "this", "these", "those",
+        }
+        LEMMATIZER = None
+        NLTK_READY = False
+else:
+    STOP_WORDS = {
+        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
+        "has", "he", "in", "is", "it", "its", "of", "on", "that", "the",
+        "to", "was", "were", "will", "with", "or", "this", "these", "those",
+    }
+    LEMMATIZER = None
+    NLTK_READY = False
 
 
 # --- SCORING PROFILES ---
@@ -91,6 +141,15 @@ def normalize_text(text: str) -> str:
     return " ".join(tokens)
 
 
+def prepare_text_for_semantic(text: str) -> str:
+    """A gentle text cleaner for the sentence-transformer model."""
+    if not text or not isinstance(text, str):
+        return ""
+    text = text.lower()
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
 def job_title_score(job_title: str, resume_title: str) -> float:
     """Scores the match between the job title and resume title."""
     if not job_title or not resume_title:
@@ -123,7 +182,7 @@ def numeric_metrics_score(job_section_text: str, resume_full_text: str) -> Tuple
     resume_stats = [int(n) for n in resume_numbers]
 
     if not job_reqs:
-        return 1.0, {"message": "No numeric requirements found in job description section."}
+        return 0.0, {"message": "No numeric requirements found in job description section."}
 
     # Find the highest numeric value in the resume (e.g., for "5+ years")
     max_resume_stat = max(resume_stats) if resume_stats else 0
@@ -138,12 +197,14 @@ def numeric_metrics_score(job_section_text: str, resume_full_text: str) -> Tuple
 
 def semantic_score(text1: str, text2: str) -> float:
     """Computes semantic similarity using a sentence-transformer model."""
-    if not text1.strip() or not text2.strip() or MODEL is None:
+    clean_text1 = prepare_text_for_semantic(text1)
+    clean_text2 = prepare_text_for_semantic(text2)
+
+    if not clean_text1 or not clean_text2 or MODEL is None or util is None:
         return 0.0
-    
-    # Compute embedding for both texts
-    embedding1 = MODEL.encode(text1, convert_to_tensor=True)
-    embedding2 = MODEL.encode(text2, convert_to_tensor=True)
+
+    embedding1 = MODEL.encode(clean_text1, convert_to_tensor=True)
+    embedding2 = MODEL.encode(clean_text2, convert_to_tensor=True)
     
     # Compute cosine-similarity
     cosine_scores = util.cos_sim(embedding1, embedding2)
@@ -151,15 +212,16 @@ def semantic_score(text1: str, text2: str) -> float:
 
 
 def keyword_score(job_section_text: str, resume_full_text: str) -> Tuple[float, List[str]]:
-    """Calculates exact keyword match score."""
+    """Calculates exact keyword match score after proper normalization."""
     job_tokens = set(normalize_text(job_section_text).split())
+    job_keywords = {token for token in job_tokens if token not in GENERIC_JOB_TERMS}
     resume_tokens = set(normalize_text(resume_full_text).split())
-    
-    if not job_tokens:
+
+    if not job_keywords:
         return 0.0, []
 
-    matched = sorted(list(job_tokens.intersection(resume_tokens)))
-    score = len(matched) / len(job_tokens) if len(job_tokens) > 0 else 0.0
+    matched = sorted(list(job_keywords.intersection(resume_tokens)))
+    score = len(matched) / len(job_keywords)
     return score, matched
 
 
@@ -200,13 +262,143 @@ def redistribute_weights_for_zeros(
     return effective_weights, penalty_weight, zero_keys
 
 
+def score_qualifications_smart(job_section_text: str, resume_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Rule-based parser for education-focused qualification checks."""
+    education = resume_data.get("education", {}) if isinstance(resume_data, dict) else {}
+    if not isinstance(education, dict):
+        education = {}
+
+    applicable_checks = 0
+    passed_count = 0
+    passed_checks: List[str] = []
+    check_details: Dict[str, Any] = {}
+
+    # --- GPA Check ---
+    gpa_match = re.search(
+        r"minimum\s+gpa\s+of\s+(\d+\.?\d*)\s*/\s*(\d+\.?\d*)",
+        job_section_text,
+        flags=re.IGNORECASE,
+    )
+    candidate_gpa = education.get("current_gpa")
+    candidate_scale = education.get("scale", 10.0)
+
+    gpa_passed = False
+    if gpa_match and candidate_gpa is not None:
+        applicable_checks += 1
+        required_gpa = float(gpa_match.group(1))
+        required_scale = float(gpa_match.group(2))
+        try:
+            candidate_gpa_float = float(candidate_gpa)
+            candidate_scale_float = float(candidate_scale) if candidate_scale is not None else 10.0
+            if required_scale > 0 and candidate_scale_float > 0:
+                required_on_candidate_scale = required_gpa * (candidate_scale_float / required_scale)
+                gpa_passed = candidate_gpa_float >= required_on_candidate_scale
+                check_details["gpa_check"] = {
+                    "required": {"value": required_gpa, "scale": required_scale},
+                    "candidate": {"value": candidate_gpa_float, "scale": candidate_scale_float},
+                    "required_on_candidate_scale": round(required_on_candidate_scale, 2),
+                    "passed": gpa_passed,
+                }
+        except (TypeError, ValueError):
+            check_details["gpa_check"] = {"passed": False, "reason": "Invalid GPA format in resume."}
+    else:
+        check_details["gpa_check"] = {
+            "passed": False,
+            "applicable": False,
+            "reason": "Could not find GPA rule in JD or GPA in resume education.",
+        }
+
+    if gpa_passed:
+        passed_count += 1
+        passed_checks.append("GPA check passed")
+
+    # --- Graduation Year Check ---
+    year_match = re.search(
+        r"graduation\s+in\s+(\d{4})\s+or\s+before",
+        job_section_text,
+        flags=re.IGNORECASE,
+    )
+    candidate_grad_year = education.get("expected_graduation_year")
+
+    year_passed = False
+    if year_match and candidate_grad_year is not None:
+        applicable_checks += 1
+        required_latest_year = int(year_match.group(1))
+        try:
+            candidate_year_int = int(candidate_grad_year)
+            year_passed = candidate_year_int <= required_latest_year
+            check_details["graduation_year_check"] = {
+                "required_latest_year": required_latest_year,
+                "candidate_year": candidate_year_int,
+                "passed": year_passed,
+            }
+        except (TypeError, ValueError):
+            check_details["graduation_year_check"] = {
+                "passed": False,
+                "reason": "Invalid graduation year format in resume.",
+            }
+    else:
+        check_details["graduation_year_check"] = {
+            "passed": False,
+            "applicable": False,
+            "reason": "Could not find graduation year rule in JD or graduation year in resume education.",
+        }
+
+    if year_passed:
+        passed_count += 1
+        passed_checks.append("Graduation year check passed")
+
+    # --- Degree Title Check ---
+    required_degree_keywords: List[str] = []
+    if re.search(r"\bb\.?\s?tech\b", job_section_text, flags=re.IGNORECASE):
+        required_degree_keywords.append("b.tech")
+    if re.search(r"computer\s+science", job_section_text, flags=re.IGNORECASE):
+        required_degree_keywords.append("computer science")
+
+    candidate_degree = str(education.get("degree", "") or "")
+    candidate_degree_norm = re.sub(r"\s+", " ", candidate_degree.lower()).strip()
+
+    degree_passed = False
+    if required_degree_keywords and candidate_degree_norm:
+        applicable_checks += 1
+        normalized_required = [k.replace(".", "") for k in required_degree_keywords]
+        normalized_candidate = candidate_degree_norm.replace(".", "")
+        degree_passed = all(k in normalized_candidate for k in normalized_required)
+        check_details["degree_title_check"] = {
+            "required_keywords": required_degree_keywords,
+            "candidate_degree": candidate_degree,
+            "passed": degree_passed,
+        }
+    else:
+        check_details["degree_title_check"] = {
+            "required_keywords": required_degree_keywords,
+            "candidate_degree": candidate_degree,
+            "passed": False,
+            "reason": "Missing JD degree keywords or candidate degree.",
+        }
+
+    if degree_passed:
+        passed_count += 1
+        passed_checks.append("Degree title check passed")
+
+    final_score = (passed_count / applicable_checks) * 100.0 if applicable_checks > 0 else 0.0
+
+    return {
+        "score": round(min(final_score, 100.0), 2),
+        "details": passed_checks,
+        "applicable_checks": applicable_checks,
+        "passed_checks_count": passed_count,
+        "checks": check_details,
+    }
+
+
 def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> Dict[str, Any]:
     # 1. Extract and prepare text from resume
     resume_full_text = flatten_to_text(resume_json)
     resume_title = resume_json.get("current_title", "")
 
     # 2. Extract text and title from job description
-    job_title = job_json.get("title", "")
+    job_title = job_json.get("job_title") or job_json.get("title", "")
     jd_sections = {
         "required_qualifications": flatten_to_text(job_json.get("required_qualifications", [])),
         "responsibilities": flatten_to_text(job_json.get("responsibilities", [])),
@@ -221,47 +413,68 @@ def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> 
     
     # --- Required Qualifications (Keyword Biased) ---
     req_qual_text = jd_sections["required_qualifications"]
-    kw_score, matched_kws = keyword_score(req_qual_text, resume_full_text)
-    sem_score = semantic_score(req_qual_text, resume_full_text)
-    num_score, num_breakdown = numeric_metrics_score(req_qual_text, resume_full_text)
-    jt_score = job_title_score(job_title, resume_title)
+    education_data = resume_json.get("education", {}) if isinstance(resume_json, dict) else {}
+    if req_qual_text.strip() and isinstance(education_data, dict) and education_data:
+        smart_result = score_qualifications_smart(req_qual_text, resume_json)
+        req_qual_final_score = smart_result["score"] / 100.0
 
-    req_raw_scores = {
-        "exact_keyword": kw_score,
-        "semantic": sem_score,
-        "numeric": num_score,
-        "job_title": jt_score,
-    }
-    req_effective_weights, req_penalty_weight, req_zero_components = redistribute_weights_for_zeros(
-        KEYWORD_BIASED_PROFILE,
-        req_raw_scores,
-        redistribution_ratio=0.80,
-    )
+        section_score_values["required_qualifications"] = req_qual_final_score
+        section_penalties["required_qualifications"] = 0.0
 
-    req_qual_final_score = (
-        req_raw_scores["exact_keyword"] * req_effective_weights["exact_keyword"] +
-        req_raw_scores["semantic"] * req_effective_weights["semantic"] +
-        req_raw_scores["numeric"] * req_effective_weights["numeric"] +
-        req_raw_scores["job_title"] * req_effective_weights["job_title"]
-    )
-    section_score_values["required_qualifications"] = req_qual_final_score
-    section_penalties["required_qualifications"] = req_penalty_weight
+        component_scores["required_qualifications"] = {
+            "profile_used": "Smart-Parser",
+            "final_section_score": round(smart_result["score"], 2),
+            "breakdown": {
+                "smart_parser_score": round(smart_result["score"], 2),
+            },
+            "effective_component_weights": {"smart_parser": 1.0},
+            "zero_components": [] if smart_result["score"] > 0.0 else ["smart_parser"],
+            "penalty_weight_due_to_zeros": 0.0,
+            "matched_details": smart_result["details"],
+            "smart_parser_details": smart_result["checks"],
+        }
+    else:
+        kw_score, matched_kws = keyword_score(req_qual_text, resume_full_text)
+        sem_score = semantic_score(req_qual_text, resume_full_text)
+        num_score, num_breakdown = numeric_metrics_score(req_qual_text, resume_full_text)
+        jt_score = job_title_score(job_title, resume_title)
 
-    component_scores["required_qualifications"] = {
-        "profile_used": "Keyword-Biased",
-        "final_section_score": round(req_qual_final_score * 100, 2),
-        "breakdown": {
-            "exact_keyword_score": round(kw_score * 100, 2),
-            "semantic_similarity": round(sem_score * 100, 2),
-            "numeric_metrics_score": round(num_score * 100, 2),
-            "job_title_score": round(jt_score * 100, 2),
-        },
-        "effective_component_weights": req_effective_weights,
-        "zero_components": req_zero_components,
-        "penalty_weight_due_to_zeros": round(req_penalty_weight, 4),
-        "matched_keywords": matched_kws,
-        "numeric_details": num_breakdown,
-    }
+        req_raw_scores = {
+            "exact_keyword": kw_score,
+            "semantic": sem_score,
+            "numeric": num_score,
+            "job_title": jt_score,
+        }
+        req_effective_weights, req_penalty_weight, req_zero_components = redistribute_weights_for_zeros(
+            KEYWORD_BIASED_PROFILE,
+            req_raw_scores,
+            redistribution_ratio=0.80,
+        )
+
+        req_qual_final_score = (
+            req_raw_scores["exact_keyword"] * req_effective_weights["exact_keyword"] +
+            req_raw_scores["semantic"] * req_effective_weights["semantic"] +
+            req_raw_scores["numeric"] * req_effective_weights["numeric"] +
+            req_raw_scores["job_title"] * req_effective_weights["job_title"]
+        )
+        section_score_values["required_qualifications"] = req_qual_final_score
+        section_penalties["required_qualifications"] = req_penalty_weight
+
+        component_scores["required_qualifications"] = {
+            "profile_used": "Keyword-Biased",
+            "final_section_score": round(req_qual_final_score * 100, 2),
+            "breakdown": {
+                "exact_keyword_score": round(kw_score * 100, 2),
+                "semantic_similarity": round(sem_score * 100, 2),
+                "numeric_metrics_score": round(num_score * 100, 2),
+                "job_title_score": round(jt_score * 100, 2),
+            },
+            "effective_component_weights": req_effective_weights,
+            "zero_components": req_zero_components,
+            "penalty_weight_due_to_zeros": round(req_penalty_weight, 4),
+            "matched_keywords": matched_kws,
+            "numeric_details": num_breakdown,
+        }
 
     # --- Responsibilities, Preferred Quals, Skills (Semantic Biased) ---
     for section_name in ["responsibilities", "preferred_qualifications", "skills"]:
