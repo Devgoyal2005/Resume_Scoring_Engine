@@ -1,35 +1,46 @@
 {
   "company": "Microsoft",
   "job_title": "Software Engineering Intern",
-  "location": "Not specified (On-site)",
+  "job_number": "200027174",
+  "date_posted": "Feb 17, 2026",
+  "location": "India, Multiple Locations",
   "employment_type": "Internship",
-  "experience_required": "At least 1 year programming experience",
+  "work_site": "Fully on-site",
+  "travel": "Less than 25%",
+  "profession": "Software Engineering",
+  "role_type": "Individual Contributor",
   "department": "Software Engineering",
-  "job_description": "Microsoft is offering an internship opportunity for students to work on real-world projects, build innovative software solutions, and collaborate with global teams while learning new technologies and contributing to impactful products.",
+  "job_description": "Come build community, explore your passions and do your best work at Microsoft with thousands of University interns from every corner of the world. As a Software Engineering Intern, you will work with teammates to solve problems and build innovative software solutions. You will apply your passion for customers and product quality as you provide technical guidance to Technical Program Managers and Product Managers. You will learn and adopt relevant new technologies, tools, methods, and processes to leverage in your solutions. This opportunity will enable you to advance your career by designing, developing, and testing next-generation software that will empower every person and organization on the planet to achieve more.",
   "responsibilities": [
-    "Apply engineering principles to solve complex problems creatively",
-    "Collaborate with stakeholders to gather and understand user requirements",
-    "Learn and adopt new technologies, tools, and engineering methods",
-    "Seek feedback and apply best practices to improve technical solutions",
-    "Manage time effectively and contribute to team-based software projects",
-    "Continuously learn and improve product performance, reliability, and scalability",
-    "Contribute to monitoring, operations, and system efficiency at scale"
+    "Apply engineering principles to solve complex problems through sound and creative engineering",
+    "Work with appropriate stakeholders to determine user requirements for a feature",
+    "Quickly learn new engineering methods and incorporate them into work processes",
+    "Seek feedback and apply internal or industry best practices to improve technical solutions",
+    "Demonstrate skill in time management and completing software projects in a cooperative team environment",
+    "Review current developments and proactively seek new knowledge that will improve the availability, reliability, efficiency, observability, and performance of products while also driving consistency in monitoring and operations at scale"
   ],
   "required_qualifications": [
-    "Currently pursuing a Bachelor’s or Master’s degree in Computer Science, Engineering, or related field",
-    "Must have at least one semester remaining after the internship",
-    "At least one year of programming experience in an object-oriented language"
+    "Currently pursuing a Bachelor's or Master's degree in Computer Science, Engineering, or related field",
+    "Must have at least 1 semester/term remaining following the completion of the internship",
+    "One year of programming experience in an object-oriented language"
   ],
   "preferred_qualifications": [
-    "Understanding of computer science fundamentals including data structures and algorithms"
+    "Ability to demonstrate an understanding of computer science fundamentals, including data structures and algorithms"
   ],
   "skills": [
+    "Software Development",
+    "REST APIs",
+    "Python",
+    "NET Framework",
+    "NET Core",
+    "Java",
+    "Cloud Infrastructure",
+    "C#",
     "Object-Oriented Programming",
     "Data Structures and Algorithms",
     "Problem Solving",
-    "Software Development",
     "Time Management",
     "Collaboration",
-    "Learning Agility"
+    "Monitoring and Observability"
   ]
 }

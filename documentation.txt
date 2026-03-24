@@ -355,3 +355,5 @@ FINAL_SCORE_WEIGHTS = {
   "preferred_qualifications": 0.20,
   "skills": 0.20
 }
+
+ C:/Users/Hp/anaconda3/Scripts/conda.exe run -p C:\Users\Hp\anaconda3 --no-capture-output python c:\Users\Hp\.vscode\extensions\ms-python.python-2026.4.0-win32-x64\python_files\get_output_via_markers.py ats_scoring_engine.py --job job_description.json --resume resume2.json --output ats_score.json
