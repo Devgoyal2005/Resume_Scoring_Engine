@@ -103,3 +103,138 @@ EXPECTED OUTPUT CONTRACT (ats_score.json)
 
 BRANCH HANDOFF INTENT
 - This file is the operational handoff prompt for another Copilot/agent to get full context quickly and continue work safely.
+
+
+Optimizing tool selection...Of course. Here is the summary and handoff prompt.
+
+### Conversation Summary
+
+The user and I have been working to improve the accuracy of a Python-based resume scoring engine. The initial score was low (42.99), and we diagnosed two primary causes:
+
+1.  **Low Semantic Similarity:** The `all-MiniLM-L6-v2` model was failing to find strong connections between the user's resume and the job description, resulting in poor scores for `responsibilities`, `skills`, and `preferred_qualifications`.
+2.  **Zero Numeric Score:** The engine could not calculate the candidate's years of experience from project and education dates to match the job's requirement for "at least one year of programming experience."
+
+The user decided the highest priority was to fix the low semantic similarity. I proposed upgrading the sentence-transformer model to the more powerful `all-mpnet-base-v2`. The user agreed and asked to see the steps. I have already modified ats_scoring_engine.py and download_model.py to use the new model name. The next step is to run the download script, execute the scoring engine, and then commit the changes.
+
+### Handoff Prompt for Next Agent
+
+Here is the prompt for the next agent to continue the work:
+
+---
+
+Hello! Your task is to complete the process of upgrading the sentence-transformer model for the resume scoring engine. The user wants to improve the semantic matching capabilities of the system.
+
+**Background:**
+
+The previous agent determined that the `all-MiniLM-L6-v2` model was providing poor semantic similarity scores. Following the user's request, the decision was made to switch to `all-mpnet-base-v2`.
+
+**Work Completed So Far:**
+
+*   ats_scoring_engine.py has been modified to reference `'all-mpnet-base-v2'`.
+*   download_model.py has also been modified to reference `'all-mpnet-base-v2'`.
+
+**Your Required Steps:**
+
+1.  **Download the New Model:** Execute the download_model.py script to download and cache the new `all-mpnet-base-v2` model. This is a necessary step before the main engine can run.
+2.  **Run the Scoring Engine:** Execute ats_scoring_engine.py with the new model to generate an updated ats_score.json.
+3.  **Analyze and Report:** Briefly analyze the new ats_score.json and report the new `final_ats_score` to the user, noting any significant changes in the component scores.
+4.  **Commit and Push:**
+    *   Create a new branch named `nandini`.
+    *   Commit the changes in ats_scoring_engine.py and download_model.py with the message "feat: Switch to all-mpnet-base-v2 model".
+    *   Push the `nandini` branch to the remote repository.
+
+---
+
+Now, I will proceed with committing the changes as requested. 
+
+Ran terminal command: git checkout -b nandini
+Completed with input: git checkout -b nandini
+
+Of course. Here is a summary of our conversation and a handover prompt for another agent.
+
+First, I'll commit the changes we've made so far to the `nandini` branch. 
+
+Ran terminal command: git checkout nandini
+
+Of course. Here is the summary and handover prompt for another agent, followed by the git operations.
+
+### Conversation Summary
+
+The primary goal of this session was to improve the accuracy of a Python-based Applicant Tracking System (ATS) scoring engine.
+
+1.  **Initial State:** The engine produced a low score of **42.99**.
+2.  **Problem Diagnosis:** We identified that the low score was primarily due to very low "semantic similarity" scores in the `responsibilities`, `preferred_qualifications`, and `skills` sections. The existing `all-MiniLM-L6-v2` sentence-transformer model was not effectively understanding the relationship between the candidate's resume and the job description. A secondary issue was that the `numeric_score` was zero because the engine couldn't calculate experience from project dates.
+3.  **User Request:** The user decided the highest priority was to improve the semantic matching by upgrading the AI model.
+4.  **Action Taken:** I have modified the necessary files (ats_scoring_engine.py and download_model.py) to switch the model from `all-MiniLM-L6-v2` to the more powerful `all-mpnet-base-v2`.
+
+### Handover Prompt for Next Agent
+
+```
+Greetings. Your task is to continue improving a Python-based ATS scoring engine.
+
+**Project Context:**
+The user wants to improve their ATS score. The previous agent has already modified the code to switch the underlying sentence-transformer model from 'all-MiniLM-L6-v2' to a more powerful one, 'all-mpnet-base-v2'. The relevant files, 'ats_scoring_engine.py' and 'download_model.py', have been updated but the changes have not been fully validated yet.
+
+**User's Goal:**
+The user wants to see the impact of the model change on their ATS score.
+
+**Your Steps:**
+1.  **Download the New Model:** Run the `download_model.py` script to fetch and cache the new 'all-mpnet-base-v2' model. This is a necessary first step.
+2.  **Run the Scoring Engine:** Execute the main `ats_scoring_engine.py` script with the new model to generate an updated `ats_score.json`.
+3.  **Analyze and Report:** Read the new `ats_score.json` file, report the new `final_ats_score` to the user, and provide a brief analysis of which sections improved the most.
+4.  **Commit and Push:** Commit the changes made to `ats_scoring_engine.py` and `download_model.py` to the 'nandini' branch and push it to the remote repository.
+```
+
+Now, I will commit and push the changes to the `nandini` branch. 
+
+Ran terminal command: git add ats_scoring_engine.py download_model.py
+
+Ran terminal command: git commit -m "feat: Switch to all-mpnet-base-v2 model"
+
+Ran terminal command: git push origin nandini
+
+Of course. I have committed the changes for switching the model to the `nandini` branch and pushed it to the remote repository.
+
+Here is the conversation summary and the handoff prompt for another agent as you requested.
+
+### Conversation Summary
+
+The user's primary goal is to improve the accuracy and score of a Python-based ATS (Applicant Tracking System) engine.
+
+1.  **Initial Problem:** The engine was producing a low score because it failed to parse and incorporate the `education` section from the user's resume.
+2.  **First Refactoring (Smart Parsers):** After fixing the initial data pipeline, the user directed a major overhaul of the ats_scoring_engine.py. This introduced several "smart parsers" to provide a more nuanced analysis than simple keyword matching:
+    *   An education parser for GPA, graduation year, and degree.
+    *   A "Project-to-Responsibility" mapper to find the best semantic link between resume projects and job duties.
+    *   A context-aware numeric parser for requirements like "5+ years of experience."
+    *   A semantic job title scorer.
+3.  **Current Status (Score: 42.99):** The new engine runs successfully, but the score is still low. Analysis of the ats_score.json output reveals two key issues:
+    *   **Low Semantic Similarity:** The core problem is that the AI model (`all-MiniLM-L6-v2`) is not finding a strong conceptual link between the language in the resume and the job description, resulting in low scores for `responsibilities`, `skills`, and `preferred_qualifications`.
+    *   **Zero Numeric Score:** The numeric parser works but can't find any explicit experience (e.g., "1 year of Python") in the resume to match the job's requirement. It doesn't yet calculate experience from project dates.
+4.  **User's Decision:** The user has identified the low semantic similarity as the most critical issue to address next and has decided to switch to a more powerful AI model to see if it improves the contextual understanding.
+
+---
+
+### Agent Handoff Prompt
+
+Hello,
+
+You are taking over a session to improve a Python-based ATS scoring engine. The user's goal is to increase their resume's score by improving the engine's semantic understanding.
+
+**Current Situation:**
+*   The ATS score is **42.99**, which is considered low.
+*   The primary reason is **low semantic similarity scores** across the `responsibilities`, `skills`, and `preferred_qualifications` sections. The current `all-MiniLM-L6-v2` model is failing to find strong connections.
+*   The user has just requested to switch to a more powerful model to address this.
+
+**Last User Prompt:**
+> "alright switch the model, but i wanna see all the progress so gimme the steps to do so"
+
+**Your Task:**
+Execute the plan to switch the sentence-transformer model from `all-MiniLM-L6-v2` to `all-mpnet-base-v2`.
+
+**Steps to Follow:**
+1.  **Modify Code:**
+    *   In ats_scoring_engine.py, change the `SentenceTransformer` model name.
+    *   In download_model.py, change the `model_name` variable to match.
+2.  **Validate:** Run a compile check to ensure there are no syntax errors in the modified files.
+3.  **Execute:** Run the ats_scoring_engine.py script with the new model to generate an updated ats_score.json.
+4.  **Analyze & Report:** Compare the new score and semantic similarity breakdowns to the previous results and report the outcome to the user.

@@ -121,6 +121,14 @@
     ]
   },
   "experience": [],
+  "education": {
+    "degree": "B.Tech in Computer Science (AI & Data Science)",
+    "institution": "Graphic Era (Deemed to be University), Dehradun",
+    "start_year": 2023,
+    "expected_graduation_year": 2027,
+    "current_gpa": 9.54,
+    "scale": 10.0
+  },
   "competitive_programming": {
     "leetcode": {
       "username": "NandiniAggarwal14",
@@ -168,9 +176,7 @@
         "HTML": 66503,
         "JavaScript": 7896,
         "Python": 10524911,
-        "CSS": 12654,
-        "PowerShell": 25697,
-        "Batchfile": 1369
+        "CSS": 12654
       },
       "languages_ranked": [
         "Python",
@@ -178,10 +184,8 @@
         "C++",
         "HTML",
         "C",
-        "PowerShell",
         "CSS",
-        "JavaScript",
-        "Batchfile"
+        "JavaScript"
       ],
       "topics_and_tools": []
     }
