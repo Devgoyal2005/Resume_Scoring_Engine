@@ -1,5 +1,5 @@
 {
-  "final_ats_score": 42.46,
+  "final_ats_score": 42.99,
   "score_scale": "0-100",
   "scoring_profiles": {
     "keyword_biased": {
@@ -66,74 +66,165 @@
     },
     "responsibilities": {
       "profile_used": "Semantic-Biased",
-      "final_section_score": 14.98,
+      "final_section_score": 16.35,
       "breakdown": {
-        "semantic_similarity": 15.79,
+        "semantic_similarity": 16.82,
         "exact_keyword_score": 12.82,
         "numeric_metrics_score": 0.0,
-        "job_title_score": 0.0
+        "job_title_score": 22.34
       },
       "effective_component_weights": {
-        "semantic": 0.8558823529411765,
-        "exact_keyword": 0.11411764705882355,
+        "semantic": 0.8166666666666667,
+        "exact_keyword": 0.1088888888888889,
         "numeric": 0.0,
-        "job_title": 0.0
+        "job_title": 0.05444444444444445
       },
       "zero_components": [
-        "numeric",
-        "job_title"
+        "numeric"
       ],
-      "penalty_weight_due_to_zeros": 0.03,
+      "penalty_weight_due_to_zeros": 0.02,
+      "matched_keywords": [
+        "based",
+        "learn",
+        "monitoring",
+        "solution",
+        "user"
+      ],
       "numeric_details": {
-        "message": "No numeric requirements found in job description section."
+        "score": 0.0,
+        "required_score": 0.0,
+        "preferred_bonus_score": 0.0,
+        "required_entities": {},
+        "preferred_entities": {},
+        "resume_entities": {},
+        "required_details": [],
+        "preferred_details": []
+      },
+      "job_title_details": {
+        "score": 0.2234100091457367,
+        "relevant_sections_count": 1,
+        "average_similarity": 0.27630001306533813,
+        "matches": [
+          {
+            "source": "skills_languages",
+            "similarity": 0.2763
+          }
+        ]
+      },
+      "responsibility_project_mapper": {
+        "score": 0.16822312772274017,
+        "best_project": "User-Level Firewall Framework",
+        "project_scores": [
+          {
+            "project": "User-Level Firewall Framework",
+            "score": 0.1682
+          },
+          {
+            "project": "ReadBuddy: AI Video Analyzer",
+            "score": 0.1021
+          },
+          {
+            "project": "Smart Emergency Assistance System",
+            "score": 0.0814
+          },
+          {
+            "project": "NotesHive",
+            "score": 0.074
+          }
+        ]
       }
     },
     "preferred_qualifications": {
       "profile_used": "Semantic-Biased",
-      "final_section_score": 20.97,
+      "final_section_score": 21.23,
       "breakdown": {
         "semantic_similarity": 16.89,
         "exact_keyword_score": 57.14,
         "numeric_metrics_score": 0.0,
-        "job_title_score": 0.0
+        "job_title_score": 22.34
       },
       "effective_component_weights": {
-        "semantic": 0.8558823529411765,
-        "exact_keyword": 0.11411764705882355,
+        "semantic": 0.8166666666666667,
+        "exact_keyword": 0.1088888888888889,
         "numeric": 0.0,
-        "job_title": 0.0
+        "job_title": 0.05444444444444445
       },
       "zero_components": [
-        "numeric",
-        "job_title"
+        "numeric"
       ],
-      "penalty_weight_due_to_zeros": 0.03,
+      "penalty_weight_due_to_zeros": 0.02,
+      "matched_keywords": [
+        "algorithm",
+        "computer",
+        "data",
+        "science"
+      ],
       "numeric_details": {
-        "message": "No numeric requirements found in job description section."
+        "score": 0.0,
+        "required_score": 0.0,
+        "preferred_bonus_score": 0.0,
+        "required_entities": {},
+        "preferred_entities": {},
+        "resume_entities": {},
+        "required_details": [],
+        "preferred_details": []
+      },
+      "job_title_details": {
+        "score": 0.2234100091457367,
+        "relevant_sections_count": 1,
+        "average_similarity": 0.27630001306533813,
+        "matches": [
+          {
+            "source": "skills_languages",
+            "similarity": 0.2763
+          }
+        ]
       }
     },
     "skills": {
       "profile_used": "Semantic-Biased",
-      "final_section_score": 18.85,
+      "final_section_score": 19.2,
       "breakdown": {
         "semantic_similarity": 18.94,
         "exact_keyword_score": 23.08,
         "numeric_metrics_score": 0.0,
-        "job_title_score": 0.0
+        "job_title_score": 22.34
       },
       "effective_component_weights": {
-        "semantic": 0.8558823529411765,
-        "exact_keyword": 0.11411764705882355,
+        "semantic": 0.8166666666666667,
+        "exact_keyword": 0.1088888888888889,
         "numeric": 0.0,
-        "job_title": 0.0
+        "job_title": 0.05444444444444445
       },
       "zero_components": [
-        "numeric",
-        "job_title"
+        "numeric"
       ],
-      "penalty_weight_due_to_zeros": 0.03,
+      "penalty_weight_due_to_zeros": 0.02,
+      "matched_keywords": [
+        "algorithm",
+        "data",
+        "management"
+      ],
       "numeric_details": {
-        "message": "No numeric requirements found in job description section."
+        "score": 0.0,
+        "required_score": 0.0,
+        "preferred_bonus_score": 0.0,
+        "required_entities": {},
+        "preferred_entities": {},
+        "resume_entities": {},
+        "required_details": [],
+        "preferred_details": []
+      },
+      "job_title_details": {
+        "score": 0.2234100091457367,
+        "relevant_sections_count": 1,
+        "average_similarity": 0.27630001306533813,
+        "matches": [
+          {
+            "source": "skills_languages",
+            "similarity": 0.2763
+          }
+        ]
       }
     }
   }
