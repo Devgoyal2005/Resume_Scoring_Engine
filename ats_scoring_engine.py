@@ -9,7 +9,7 @@ try:
     from nltk.stem import WordNetLemmatizer
     from sentence_transformers import SentenceTransformer, util
     NLTK_AVAILABLE = True
-    MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+    MODEL = SentenceTransformer('all-mpnet-base-v2')
 except ImportError:
     nltk = None
     stopwords = None
@@ -225,6 +225,238 @@ def keyword_score(job_section_text: str, resume_full_text: str) -> Tuple[float, 
     return score, matched
 
 
+def extract_numeric_entities(text: str, priority: str) -> Dict[str, List[Any]]:
+    """
+    Extract numeric requirement entities in the form:
+    key -> [value, modifier, priority]
+
+    Example:
+      "5+ years of Python experience" -> {"python": [5, "more", "required"]}
+    """
+    if not text or not isinstance(text, str):
+        return {}
+
+    entities: Dict[str, List[Any]] = {}
+    normalized_text = text.lower()
+
+    patterns = [
+        # 5+ years of Python experience
+        re.compile(r"(\d+)\s*(\+)?\s*(?:years?|yrs?)\s+of\s+([a-zA-Z][a-zA-Z0-9\s\-\+\.#&/]{1,50}?)(?:\s+experience|\s+exp)?(?=$|[,.;&]|\s+and\s)", re.IGNORECASE),
+        # 2 years AWS experience
+        re.compile(r"(\d+)\s*(\+)?\s*(?:years?|yrs?)\s+([a-zA-Z][a-zA-Z0-9\s\-\+\.#&/]{1,50}?)(?:\s+experience|\s+exp)(?=$|[,.;&]|\s+and\s)", re.IGNORECASE),
+        # at least 1 year programming experience
+        re.compile(r"(?:at\s+least|minimum\s+of|min\.?\s*)\s*(\d+)\s*(\+)?\s*(?:years?|yrs?)\s+([a-zA-Z][a-zA-Z0-9\s\-\+\.#&/]{1,50}?)(?:\s+experience|\s+exp)?(?=$|[,.;&]|\s+and\s)", re.IGNORECASE),
+    ]
+
+    for pattern in patterns:
+        for match in pattern.finditer(normalized_text):
+            value = int(match.group(1))
+            plus_symbol = match.group(2)
+            topic_raw = match.group(3).strip()
+
+            # Keep topic concise and normalized for map key
+            topic_norm = normalize_text(topic_raw)
+            topic_norm = re.sub(r"\s+", " ", topic_norm).strip()
+            if not topic_norm:
+                continue
+
+            modifier = "more" if plus_symbol or re.search(r"\bat\s+least\b|\bminimum\b|min\.", match.group(0), re.IGNORECASE) else None
+
+            existing = entities.get(topic_norm)
+            if existing is None or value > int(existing[0]):
+                entities[topic_norm] = [value, modifier, priority]
+
+    return entities
+
+
+def score_numeric_contextually(job_req_text: str, job_pref_text: str, resume_full_text: str) -> Dict[str, Any]:
+    """
+    Context-aware numeric scoring:
+    - Required items not met -> penalty via denominator increase.
+    - Preferred items met -> bonus only, no penalty when missing.
+    """
+    required_entities = extract_numeric_entities(job_req_text, "required")
+    preferred_entities = extract_numeric_entities(job_pref_text, "preferred")
+    resume_entities = extract_numeric_entities(resume_full_text, "resume")
+
+    required_total = len(required_entities)
+    required_met = 0
+    preferred_bonus_hits = 0
+
+    required_details: List[Dict[str, Any]] = []
+    preferred_details: List[Dict[str, Any]] = []
+
+    for key, (required_value, required_modifier, _) in required_entities.items():
+        resume_item = resume_entities.get(key)
+        met = False
+        resume_value = None
+
+        if resume_item:
+            resume_value = int(resume_item[0])
+            if required_modifier == "more":
+                met = resume_value >= int(required_value)
+            else:
+                met = resume_value >= int(required_value)
+
+        if met:
+            required_met += 1
+
+        required_details.append({
+            "key": key,
+            "required": [required_value, required_modifier, "required"],
+            "resume": resume_item,
+            "met": met,
+            "resume_value": resume_value,
+        })
+
+    for key, (preferred_value, preferred_modifier, _) in preferred_entities.items():
+        resume_item = resume_entities.get(key)
+        met = False
+
+        if resume_item:
+            resume_value = int(resume_item[0])
+            if preferred_modifier == "more":
+                met = resume_value >= int(preferred_value)
+            else:
+                met = resume_value >= int(preferred_value)
+
+        if met:
+            preferred_bonus_hits += 1
+
+        preferred_details.append({
+            "key": key,
+            "preferred": [preferred_value, preferred_modifier, "preferred"],
+            "resume": resume_item,
+            "met": met,
+        })
+
+    required_score = (required_met / required_total) if required_total > 0 else 0.0
+    preferred_bonus_score = min(1.0, preferred_bonus_hits * 0.20)
+    overall_score = min(1.0, required_score + preferred_bonus_score)
+
+    return {
+        "score": overall_score,
+        "required_score": required_score,
+        "preferred_bonus_score": preferred_bonus_score,
+        "required_entities": required_entities,
+        "preferred_entities": preferred_entities,
+        "resume_entities": resume_entities,
+        "required_details": required_details,
+        "preferred_details": preferred_details,
+    }
+
+
+def score_responsibilities_by_project(job_responsibilities_text: str, resume_projects: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Find best semantic project match for responsibilities text."""
+    if not job_responsibilities_text or not resume_projects:
+        return {
+            "score": 0.0,
+            "best_project": None,
+            "project_scores": [],
+        }
+
+    max_score = 0.0
+    best_project = None
+    project_scores: List[Dict[str, Any]] = []
+
+    for project in resume_projects:
+        if not isinstance(project, dict):
+            continue
+        project_name = str(project.get("name", "Unnamed Project"))
+        project_text = " ".join(
+            [
+                str(project.get("name", "")),
+                flatten_to_text(project.get("technologies", [])),
+                flatten_to_text(project.get("description", [])),
+            ]
+        ).strip()
+
+        current_score = semantic_score(job_responsibilities_text, project_text)
+        project_scores.append({"project": project_name, "score": round(current_score, 4)})
+
+        if current_score > max_score:
+            max_score = current_score
+            best_project = project_name
+
+    project_scores = sorted(project_scores, key=lambda x: x["score"], reverse=True)
+    return {
+        "score": max_score,
+        "best_project": best_project,
+        "project_scores": project_scores,
+    }
+
+
+def score_job_title_semantically(job_title: str, resume_data: Dict[str, Any], threshold: float = 0.25) -> Dict[str, Any]:
+    """
+    Score job-title relevance by searching semantic evidence across projects,
+    experience, and skills. Rewards repeated mentions up to 10 matches.
+    """
+    if not job_title or not isinstance(resume_data, dict):
+        return {
+            "score": 0.0,
+            "relevant_sections_count": 0,
+            "average_similarity": 0.0,
+            "matches": [],
+        }
+
+    sources: List[Tuple[str, str]] = []
+
+    projects = resume_data.get("projects", [])
+    if isinstance(projects, list):
+        for idx, project in enumerate(projects):
+            if isinstance(project, dict):
+                text = " ".join([
+                    str(project.get("name", "")),
+                    flatten_to_text(project.get("technologies", [])),
+                    flatten_to_text(project.get("description", [])),
+                ]).strip()
+                if text:
+                    sources.append((f"project_{idx+1}", text))
+
+    experience = resume_data.get("experience", [])
+    if isinstance(experience, list):
+        for idx, exp in enumerate(experience):
+            text = flatten_to_text(exp)
+            if text:
+                sources.append((f"experience_{idx+1}", text))
+
+    skills = resume_data.get("skills", {})
+    if isinstance(skills, dict):
+        for key, value in skills.items():
+            text = flatten_to_text(value)
+            if text:
+                sources.append((f"skills_{key}", text))
+
+    if not sources:
+        return {
+            "score": 0.0,
+            "relevant_sections_count": 0,
+            "average_similarity": 0.0,
+            "matches": [],
+        }
+
+    relevant_scores: List[float] = []
+    matches: List[Dict[str, Any]] = []
+
+    for source_name, source_text in sources:
+        sim = semantic_score(job_title, source_text)
+        if sim >= threshold:
+            relevant_scores.append(sim)
+            matches.append({"source": source_name, "similarity": round(sim, 4)})
+
+    relevant_sections_count = len(relevant_scores)
+    average_similarity = (sum(relevant_scores) / relevant_sections_count) if relevant_sections_count else 0.0
+    frequency_bonus = min(relevant_sections_count, 10) * 0.03
+    score = min(1.0, (average_similarity * 0.7) + frequency_bonus)
+
+    return {
+        "score": score,
+        "relevant_sections_count": relevant_sections_count,
+        "average_similarity": average_similarity,
+        "matches": matches,
+    }
+
+
 def redistribute_weights_for_zeros(
     base_weights: Dict[str, float],
     scores: Dict[str, float],
@@ -395,16 +627,27 @@ def score_qualifications_smart(job_section_text: str, resume_data: Dict[str, Any
 def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> Dict[str, Any]:
     # 1. Extract and prepare text from resume
     resume_full_text = flatten_to_text(resume_json)
-    resume_title = resume_json.get("current_title", "")
 
     # 2. Extract text and title from job description
     job_title = job_json.get("job_title") or job_json.get("title", "")
+    req_qual_list = job_json.get("required_qualifications", [])
+    pref_qual_list = job_json.get("preferred_qualifications", [])
+
     jd_sections = {
-        "required_qualifications": flatten_to_text(job_json.get("required_qualifications", [])),
+        "required_qualifications": flatten_to_text(req_qual_list),
         "responsibilities": flatten_to_text(job_json.get("responsibilities", [])),
-        "preferred_qualifications": flatten_to_text(job_json.get("preferred_qualifications", [])),
+        "preferred_qualifications": flatten_to_text(pref_qual_list),
         "skills": flatten_to_text(job_json.get("skills", [])),
     }
+
+    # 2.1 Compute shared smart signals once
+    numeric_context = score_numeric_contextually(
+        jd_sections["required_qualifications"],
+        jd_sections["preferred_qualifications"],
+        resume_full_text,
+    )
+    title_context = score_job_title_semantically(job_title, resume_json)
+    resume_projects = resume_json.get("projects", []) if isinstance(resume_json, dict) else []
 
     # 3. Calculate scores for each section using the Profile-Based system
     component_scores = {}
@@ -436,8 +679,8 @@ def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> 
     else:
         kw_score, matched_kws = keyword_score(req_qual_text, resume_full_text)
         sem_score = semantic_score(req_qual_text, resume_full_text)
-        num_score, num_breakdown = numeric_metrics_score(req_qual_text, resume_full_text)
-        jt_score = job_title_score(job_title, resume_title)
+        num_score = numeric_context["required_score"]
+        jt_score = title_context["score"]
 
         req_raw_scores = {
             "exact_keyword": kw_score,
@@ -473,7 +716,8 @@ def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> 
             "zero_components": req_zero_components,
             "penalty_weight_due_to_zeros": round(req_penalty_weight, 4),
             "matched_keywords": matched_kws,
-            "numeric_details": num_breakdown,
+            "numeric_details": numeric_context,
+            "job_title_details": title_context,
         }
 
     # --- Responsibilities, Preferred Quals, Skills (Semantic Biased) ---
@@ -498,10 +742,23 @@ def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> 
             }
             continue
 
-        kw_score, _ = keyword_score(section_text, resume_full_text)
-        sem_score = semantic_score(section_text, resume_full_text)
-        num_score, num_breakdown = numeric_metrics_score(section_text, resume_full_text)
-        jt_score = job_title_score(job_title, resume_title)
+        kw_score, matched_kws = keyword_score(section_text, resume_full_text)
+
+        mapper_details = None
+        if section_name == "responsibilities":
+            mapper_details = score_responsibilities_by_project(section_text, resume_projects)
+            sem_score = mapper_details["score"]
+        else:
+            sem_score = semantic_score(section_text, resume_full_text)
+
+        if section_name == "preferred_qualifications":
+            num_score = numeric_context["preferred_bonus_score"]
+        elif section_name == "skills":
+            num_score = numeric_context["score"] * 0.30
+        else:
+            num_score = numeric_context["required_score"] * 0.20
+
+        jt_score = title_context["score"]
 
         raw_scores = {
             "exact_keyword": kw_score,
@@ -536,8 +793,12 @@ def compute_ats_score(job_json: Dict[str, Any], resume_json: Dict[str, Any]) -> 
             "effective_component_weights": effective_weights,
             "zero_components": zero_components,
             "penalty_weight_due_to_zeros": round(penalty_weight, 4),
-            "numeric_details": num_breakdown,
+            "matched_keywords": matched_kws,
+            "numeric_details": numeric_context,
+            "job_title_details": title_context,
         }
+        if mapper_details is not None:
+            component_scores[section_name]["responsibility_project_mapper"] = mapper_details
 
     # 4. Redistribute top-level section weights if any section score is zero.
     effective_final_weights, final_weight_penalty, zero_sections = redistribute_weights_for_zeros(
